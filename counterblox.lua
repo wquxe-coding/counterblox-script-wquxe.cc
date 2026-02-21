@@ -1,4 +1,3 @@
--- WQUXE.CC | ПРОСТО ВХ + БХОП (БЕЗ КЛЮЧЕЙ)
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
@@ -9,7 +8,6 @@ local Camera = workspace.CurrentCamera
 
 repeat wait() until LocalPlayer and LocalPlayer.Character
 
--- ВАТЕРМАРК
 local watermark = Drawing.new("Text")
 watermark.Visible = true
 watermark.Center = true
@@ -19,12 +17,10 @@ watermark.Size = 18
 watermark.Outline = true
 watermark.OutlineColor = Color3.fromRGB(255, 0, 0)
 
--- ФУНКЦИЯ ПРОВЕРКИ ВРАГА
 local function isEnemy(player)
     return player.Team ~= LocalPlayer.Team
 end
 
--- ИНФОРМАЦИЯ НАД ГОЛОВОЙ
 local function createHeadInfo(player)
     if not player.Character then return end
     local head = player.Character:FindFirstChild("Head")
@@ -41,8 +37,7 @@ local function createHeadInfo(player)
     frame.Size = UDim2.new(1, 0, 1, 0)
     frame.BackgroundTransparency = 1
     frame.Parent = bill
-    
-    -- ИМЯ
+
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Size = UDim2.new(1, 0, 0, 18)
     nameLabel.Position = UDim2.new(0, 0, 0, 0)
@@ -53,8 +48,7 @@ local function createHeadInfo(player)
     nameLabel.TextSize = 13
     nameLabel.TextStrokeTransparency = 0.3
     nameLabel.Parent = frame
-    
-    -- ХП ТЕКСТ
+
     local healthLabel = Instance.new("TextLabel")
     healthLabel.Name = "HealthText"
     healthLabel.Size = UDim2.new(1, 0, 0, 16)
@@ -64,8 +58,7 @@ local function createHeadInfo(player)
     healthLabel.Font = Enum.Font.GothamBold
     healthLabel.TextSize = 12
     healthLabel.Parent = frame
-    
-    -- ХП ПОЛОСКА
+
     local barFrame = Instance.new("Frame")
     barFrame.Name = "HealthBarFrame"
     barFrame.Size = UDim2.new(1, -20, 0, 4)
@@ -82,7 +75,6 @@ local function createHeadInfo(player)
     bar.Parent = barFrame
 end
 
--- ОСНОВНОЙ ЦИКЛ
 RunService.RenderStepped:Connect(function()
     local screenSize = Camera.ViewportSize
     watermark.Position = Vector2.new(screenSize.X / 2, screenSize.Y - 30)
@@ -92,7 +84,6 @@ RunService.RenderStepped:Connect(function()
             local head = player.Character.Head
             
             if isEnemy(player) then
-                -- ПОДСВЕТКА
                 local highlight = player.Character:FindFirstChild("EnemyHighlight")
                 if not highlight then
                     highlight = Instance.new("Highlight")
@@ -106,13 +97,11 @@ RunService.RenderStepped:Connect(function()
                     highlight.Parent = player.Character
                 end
                 
-                -- ИНФОРМАЦИЯ
                 local info = head:FindFirstChild("EnemyInfo")
                 if not info then
                     createHeadInfo(player)
                 end
-                
-                -- ОБНОВЛЕНИЕ ХП
+                    
                 info = head:FindFirstChild("EnemyInfo")
                 if info and info.Frame and player.Character:FindFirstChild("Humanoid") then
                     local humanoid = player.Character.Humanoid
@@ -147,7 +136,7 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             else
-                -- УДАЛЯЕМ ПОДСВЕТКУ У ТИММЕЙТОВ
+
                 local highlight = player.Character:FindFirstChild("EnemyHighlight")
                 if highlight then highlight:Destroy() end
                 
@@ -158,7 +147,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- БАННИХОП
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character then
         local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
@@ -169,15 +157,3 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
-print([[
-╔══════════════════════════════════════╗
-║        WQUXE.CC FREE                 ║
-╠══════════════════════════════════════╣
-║  🔹 ВХ (КРАСНАЯ ПОДСВЕТКА)           ║
-║  🔹 ИМЕНА + ХП НАД ГОЛОВОЙ           ║
-║  🔹 БАННИХОП                         ║
-║                                      ║
-║  🎯 ТИММЕЙТОВ НЕ ПОДСВЕЧИВАЕТ        ║
-╚══════════════════════════════════════╝
-]])
