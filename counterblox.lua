@@ -17,134 +17,142 @@ watermark.Size = 18
 watermark.Outline = true
 watermark.OutlineColor = Color3.fromRGB(255, 0, 0)
 
-local bars = {}
-
-local function isEnemy(p)
-    return p.Team ~= LocalPlayer.Team
+local function isEnemy(player)
+    return player.Team ~= LocalPlayer.Team
 end
 
-local function makeBar(p)
-    if bars[p] then return end
-    bars[p] = {
-        bg = Drawing.new("Square"),
-        fill = Drawing.new("Square"),
-        text = Drawing.new("Text")
-    }
-end
+local function createHeadInfo(player)
+    if not player.Character then return end
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return end
+    
+    local bill = Instance.new("BillboardGui")
+    bill.Name = "EnemyInfo"
+    bill.Size = UDim2.new(0, 120, 0, 45)
+    bill.StudsOffset = Vector3.new(0, 2.5, 0)
+    bill.AlwaysOnTop = true
+    bill.Parent = head
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundTransparency = 1
+    frame.Parent = bill
 
-local function hideBar(p)
-    if not bars[p] then return end
-    bars[p].bg.Visible = false
-    bars[p].fill.Visible = false
-    bars[p].text.Visible = false
-end
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 0, 18)
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.Name
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 13
+    nameLabel.TextStrokeTransparency = 0.3
+    nameLabel.Parent = frame
 
-local function killBar(p)
-    if not bars[p] then return end
-    bars[p].bg:Remove()
-    bars[p].fill:Remove()
-    bars[p].text:Remove()
-    bars[p] = nil
-end
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Name = "HealthText"
+    healthLabel.Size = UDim2.new(1, 0, 0, 16)
+    healthLabel.Position = UDim2.new(0, 0, 0, 18)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = "HP: 100"
+    healthLabel.Font = Enum.Font.GothamBold
+    healthLabel.TextSize = 12
+    healthLabel.Parent = frame
 
+    local barFrame = Instance.new("Frame")
+    barFrame.Name = "HealthBarFrame"
+    barFrame.Size = UDim2.new(1, -20, 0, 4)
+    barFrame.Position = UDim2.new(0, 10, 0, 36)
+    barFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    barFrame.BorderSizePixel = 0
+    barFrame.Parent = frame
+    
+    local bar = Instance.new("Frame")
+    bar.Name = "HealthBar"
+    bar.Size = UDim2.new(1, 0, 1, 0)
+    bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    bar.BorderSizePixel = 0
+    bar.Parent = barFrame
+end
 RunService.RenderStepped:Connect(function()
-    local sz = Camera.ViewportSize
-    watermark.Position = Vector2.new(sz.X / 2, sz.Y - 30)
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p == LocalPlayer then goto next end
-        if not p.Character then goto next end
-
-        local root = p.Character:FindFirstChild("HumanoidRootPart")
-        local head = p.Character:FindFirstChild("Head")
-        local hum = p.Character:FindFirstChild("Humanoid")
-
-        if isEnemy(p) then
-            if not p.Character:FindFirstChild("EnemyHighlight") then
-                local h = Instance.new("Highlight")
-                h.Name = "EnemyHighlight"
-                h.Adornee = p.Character
-                h.FillColor = Color3.fromRGB(255,0,0)
-                h.OutlineColor = Color3.new(1,1,1)
-                h.FillTransparency = 0.4
-                h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                h.Parent = p.Character
-            end
-
-            if head and not head:FindFirstChild("NameTag") then
-                local bill = Instance.new("BillboardGui")
-                bill.Name = "NameTag"
-                bill.Size = UDim2.new(0,120,0,20)
-                bill.StudsOffset = Vector3.new(0,2.5,0)
-                bill.AlwaysOnTop = true
-                bill.Parent = head
-                local lbl = Instance.new("TextLabel")
-                lbl.Size = UDim2.new(1,0,1,0)
-                lbl.BackgroundTransparency = 1
-                lbl.Text = p.Name
-                lbl.TextColor3 = Color3.new(1,1,1)
-                lbl.Font = Enum.Font.GothamBold
-                lbl.TextSize = 13
-                lbl.TextStrokeTransparency = 0.3
-                lbl.Parent = bill
-            end
-
-            if root and hum then
-                local pos, vis = Camera:WorldToViewportPoint(root.Position + Vector3.new(2.5,0,0))
-                if vis then
-                    makeBar(p)
-                    local bar = bars[p]
-                    local x, y = pos.X, pos.Y
-                    local w, h = 6, 50
-                    local hp = math.clamp(hum.Health / 100, 0, 1)
-
-                    bar.bg.Visible = true
-                    bar.bg.Position = Vector2.new(x - w/2, y - h/2)
-                    bar.bg.Size = Vector2.new(w, h)
-                    bar.bg.Color = Color3.new(0,0,0)
-                    bar.bg.Transparency = 0.3
-                    bar.bg.Filled = true
-
-                    bar.fill.Visible = true
-                    bar.fill.Position = Vector2.new(x - w/2, y - h/2 + h * (1 - hp))
-                    bar.fill.Size = Vector2.new(w, h * hp)
-                    bar.fill.Filled = true
-                    if hp > 0.7 then
-                        bar.fill.Color = Color3.new(0,1,0)
-                    elseif hp > 0.3 then
-                        bar.fill.Color = Color3.new(1,1,0)
-                    else
-                        bar.fill.Color = Color3.new(1,0,0)
-                    end
-
-                    bar.text.Visible = true
-                    bar.text.Position = Vector2.new(x + 10, y - 10)
-                    bar.text.Text = tostring(math.floor(hum.Health))
-                    bar.text.Color = Color3.new(1,1,1)
-                    bar.text.Size = 14
-                    bar.text.Outline = true
-                else
-                    if bars[p] then hideBar(p) end
+    local screenSize = Camera.ViewportSize
+    watermark.Position = Vector2.new(screenSize.X / 2, screenSize.Y - 30)
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            
+            if isEnemy(player) then
+                local highlight = player.Character:FindFirstChild("EnemyHighlight")
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "EnemyHighlight"
+                    highlight.Adornee = player.Character
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.FillTransparency = 0.4
+                    highlight.OutlineTransparency = 0.2
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    highlight.Parent = player.Character
                 end
-            end
-        else
-            if head and head:FindFirstChild("NameTag") then head.NameTag:Destroy() end
-            if p.Character:FindFirstChild("EnemyHighlight") then p.Character.EnemyHighlight:Destroy() end
-            if bars[p] then killBar(p) end
-        end
-        ::next::
-    end
+                
+                local info = head:FindFirstChild("EnemyInfo")
+                if not info then
+                    createHeadInfo(player)
+                end
+                    
+                info = head:FindFirstChild("EnemyInfo")
+                if info and info.Frame and player.Character:FindFirstChild("Humanoid") then
+                    local humanoid = player.Character.Humanoid
+                    local health = math.floor(humanoid.Health)
+                    local healthPercent = health / 100
+                    
+                    local healthLabel = info.Frame:FindFirstChild("HealthText")
+                    if healthLabel then
+                        healthLabel.Text = "HP: " .. health .. "/100"
+                        if health > 70 then
+                            healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+                        elseif health > 30 then
+                            healthLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+                        else
+                            healthLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                        end
+                    end
+                    
+                    local healthBar = info.Frame:FindFirstChild("HealthBarFrame")
+                    if healthBar then
+                        local bar = healthBar:FindFirstChild("HealthBar")
+                        if bar then
+                            bar.Size = UDim2.new(healthPercent, 0, 1, 0)
+                            if health > 70 then
+                                bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                            elseif health > 30 then
+                                bar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+                            else
+                                bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                            end
+                        end
+                    end
+                end
+            else
 
-    for p, bar in pairs(bars) do
-        if not p or not p.Parent then killBar(p) end
+                local highlight = player.Character:FindFirstChild("EnemyHighlight")
+                if highlight then highlight:Destroy() end
+                
+                local info = head:FindFirstChild("EnemyInfo")
+                if info then info:Destroy() end
+            end
+        end
     end
 end)
 
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character then
-        local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
-        if hum and UserInputService:IsKeyDown(Enum.KeyCode.Space) and hum.FloorMaterial ~= Enum.Material.Air then
-            hum.Jump = true
+        local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
+        if humanoid and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            if humanoid.FloorMaterial ~= Enum.Material.Air then
+                humanoid.Jump = true
+            end
         end
     end
 end)
