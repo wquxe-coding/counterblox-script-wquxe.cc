@@ -7,7 +7,6 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 repeat wait() until LocalPlayer and LocalPlayer.Character
-
 local watermark = Drawing.new("Text")
 watermark.Visible = true
 watermark.Center = true
@@ -16,73 +15,81 @@ watermark.Color = Color3.fromRGB(255, 255, 255)
 watermark.Size = 18
 watermark.Outline = true
 watermark.OutlineColor = Color3.fromRGB(255, 0, 0)
-
 local function isEnemy(player)
     return player.Team ~= LocalPlayer.Team
 end
-
-local function createHeadInfo(player)
+local function createNameTag(player)
     if not player.Character then return end
     local head = player.Character:FindFirstChild("Head")
     if not head then return end
-    
+
+
+    local oldTag = head:FindFirstChild("NameTag")
+    if oldTag then oldTag:Destroy() end
     local bill = Instance.new("BillboardGui")
-    bill.Name = "EnemyInfo"
-    bill.Size = UDim2.new(0, 120, 0, 45)
+    bill.Name = "NameTag"
+    bill.Size = UDim2.new(0, 120, 0, 20)
     bill.StudsOffset = Vector3.new(0, 2.5, 0)
     bill.AlwaysOnTop = true
     bill.Parent = head
-    
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundTransparency = 1
-    frame.Parent = bill
-
     local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 0, 18)
-    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.TextSize = 13
     nameLabel.TextStrokeTransparency = 0.3
-    nameLabel.Parent = frame
-
-    local healthLabel = Instance.new("TextLabel")
-    healthLabel.Name = "HealthText"
-    healthLabel.Size = UDim2.new(1, 0, 0, 16)
-    healthLabel.Position = UDim2.new(0, 0, 0, 18)
-    healthLabel.BackgroundTransparency = 1
-    healthLabel.Text = "HP: 100"
-    healthLabel.Font = Enum.Font.GothamBold
-    healthLabel.TextSize = 12
-    healthLabel.Parent = frame
-
-    local barFrame = Instance.new("Frame")
-    barFrame.Name = "HealthBarFrame"
-    barFrame.Size = UDim2.new(1, -20, 0, 4)
-    barFrame.Position = UDim2.new(0, 10, 0, 36)
-    barFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    barFrame.BorderSizePixel = 0
-    barFrame.Parent = frame
-    
+    nameLabel.Parent = bill
+end
+local function createHealthBar(player)
+    if not player.Character then return end
+    local root = player.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local oldBar = root:FindFirstChild("HealthBarGUI")
+    if oldBar then oldBar:Destroy() end
+    local bill = Instance.new("BillboardGui")
+    bill.Name = "HealthBarGUI"
+    bill.Size = UDim2.new(0, 80, 0, 25)
+    bill.StudsOffset = Vector3.new(2.5, 1, 0)
+    bill.AlwaysOnTop = true
+    bill.Parent = root
+    local bg = Instance.new("Frame")
+    bg.Name = "Background"
+    bg.Size = UDim2.new(1, 0, 0, 5)
+    bg.Position = UDim2.new(0, 0, 0, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BorderSizePixel = 0
+    bg.Parent = bill
     local bar = Instance.new("Frame")
     bar.Name = "HealthBar"
     bar.Size = UDim2.new(1, 0, 1, 0)
     bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
     bar.BorderSizePixel = 0
-    bar.Parent = barFrame
+    bar.Parent = bg
+
+    local healthText = Instance.new("TextLabel")
+    healthText.Name = "HealthText"
+    healthText.Size = UDim2.new(1, 0, 0, 15)
+    healthText.Position = UDim2.new(0, 0, 0, -15)
+    healthText.BackgroundTransparency = 1
+    healthText.Text = "100"
+    healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    healthText.Font = Enum.Font.GothamBold
+    healthText.TextSize = 12
+    healthText.TextStrokeTransparency = 0.3
+    healthText.Parent = bill
 end
 
 RunService.RenderStepped:Connect(function()
     local screenSize = Camera.ViewportSize
     watermark.Position = Vector2.new(screenSize.X / 2, screenSize.Y - 30)
-    
+
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            local head = player.Character.Head
-            
+        if player ~= LocalPlayer and player.Character then
+            local head = player.Character:FindFirstChild("Head")
+            local root = player.Character:FindFirstChild("HumanoidRootPart")
+
             if isEnemy(player) then
                 local highlight = player.Character:FindFirstChild("EnemyHighlight")
                 if not highlight then
@@ -96,57 +103,60 @@ RunService.RenderStepped:Connect(function()
                     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
                     highlight.Parent = player.Character
                 end
-                
-                local info = head:FindFirstChild("EnemyInfo")
-                if not info then
-                    createHeadInfo(player)
-                end
-                    
-                info = head:FindFirstChild("EnemyInfo")
-                if info and info.Frame and player.Character:FindFirstChild("Humanoid") then
-                    local humanoid = player.Character.Humanoid
-                    local health = math.floor(humanoid.Health)
-                    local healthPercent = health / 100
-                    
-                    local healthLabel = info.Frame:FindFirstChild("HealthText")
-                    if healthLabel then
-                        healthLabel.Text = "HP: " .. health .. "/100"
-                        if health > 70 then
-                            healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-                        elseif health > 30 then
-                            healthLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
-                        else
-                            healthLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                        end
+                if head then
+                    local nameTag = head:FindFirstChild("NameTag")
+                    if not nameTag then
+                        createNameTag(player)
                     end
-                    
-                    local healthBar = info.Frame:FindFirstChild("HealthBarFrame")
-                    if healthBar then
-                        local bar = healthBar:FindFirstChild("HealthBar")
-                        if bar then
-                            bar.Size = UDim2.new(healthPercent, 0, 1, 0)
-                            if health > 70 then
-                                bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                            elseif health > 30 then
-                                bar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
-                            else
-                                bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                end
+
+                if root then
+                    local healthBarGui = root:FindFirstChild("HealthBarGUI")
+                    if not healthBarGui then
+                        createHealthBar(player)
+                    else
+                        local humanoid = player.Character:FindFirstChild("Humanoid")
+                        if humanoid then
+                            local health = math.floor(humanoid.Health)
+                            local maxHealth = 100
+                            local healthPercent = health / maxHealth
+                            local bg = healthBarGui:FindFirstChild("Background")
+                            if bg then
+                                local bar = bg:FindFirstChild("HealthBar")
+                                if bar then
+                                    bar.Size = UDim2.new(healthPercent, 0, 1, 0)
+                                    if health > 70 then
+                                        bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                                    elseif health > 30 then
+                                        bar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+                                    else
+                                        bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                                    end
+                                end
+                            end
+                            local healthText = healthBarGui:FindFirstChild("HealthText")
+                            if healthText then
+                                healthText.Text = tostring(health)
                             end
                         end
                     end
                 end
-            else
 
+            else                
+                if head then
+                    local nameTag = head:FindFirstChild("NameTag")
+                    if nameTag then nameTag:Destroy() end
+                end
+                if root then
+                    local healthBarGui = root:FindFirstChild("HealthBarGUI")
+                    if healthBarGui then healthBarGui:Destroy() end
+                end
                 local highlight = player.Character:FindFirstChild("EnemyHighlight")
                 if highlight then highlight:Destroy() end
-                
-                local info = head:FindFirstChild("EnemyInfo")
-                if info then info:Destroy() end
             end
         end
     end
 end)
-
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character then
         local humanoid = LocalPlayer.Character:FindFirstChild("Humanoid")
