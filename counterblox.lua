@@ -25,14 +25,17 @@ local function createNameTag(player)
     if not player.Character then return end
     local head = player.Character:FindFirstChild("Head")
     if not head then return end
+
     local old = head:FindFirstChild("NameTag")
     if old then old:Destroy() end
+
     local bill = Instance.new("BillboardGui")
     bill.Name = "NameTag"
     bill.Size = UDim2.new(0, 120, 0, 20)
     bill.StudsOffset = Vector3.new(0, 2.5, 0)
     bill.AlwaysOnTop = true
     bill.Parent = head
+
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Size = UDim2.new(1, 0, 1, 0)
     nameLabel.BackgroundTransparency = 1
@@ -80,7 +83,7 @@ RunService.RenderStepped:Connect(function()
                 if root and humanoid then
                     local health = humanoid.Health
                     local maxHealth = 100
-                    local percent = health / maxHealth
+                    local percent = math.clamp(health / maxHealth, 0, 1)
 
                     local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position + Vector3.new(2.5, 0, 0))
 
@@ -108,9 +111,9 @@ RunService.RenderStepped:Connect(function()
                         bar.fill.Visible = true
                         bar.fill.Position = Vector2.new(x - width/2, y - height/2 + height * (1 - percent))
                         bar.fill.Size = Vector2.new(width, height * percent)
-                        if health > 70 then
+                        if percent > 0.7 then
                             bar.fill.Color = Color3.fromRGB(0, 255, 0)
-                        elseif health > 30 then
+                        elseif percent > 0.3 then
                             bar.fill.Color = Color3.fromRGB(255, 255, 0)
                         else
                             bar.fill.Color = Color3.fromRGB(255, 0, 0)
