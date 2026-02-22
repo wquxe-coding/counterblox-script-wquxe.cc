@@ -53,8 +53,8 @@ local function createSideHealthBar(player)
 
     local bill = Instance.new("BillboardGui")
     bill.Name = "SideHealth"
-    bill.Size = UDim2.new(0, 40, 0, 80)
-    bill.StudsOffset = Vector3.new(3, 0, 0)
+    bill.Size = UDim2.new(0, 8, 0, 70) -- Тонкая ширина 8
+    bill.StudsOffset = Vector3.new(2.5, 0, 0) -- Сбоку
     bill.AlwaysOnTop = true
     bill.Parent = root
 
@@ -62,6 +62,7 @@ local function createSideHealthBar(player)
     bg.Name = "Background"
     bg.Size = UDim2.new(1, 0, 1, 0)
     bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    bg.BackgroundTransparency = 0.3 -- Чуть прозрачный
     bg.BorderSizePixel = 0
     bg.Parent = bill
 
@@ -74,13 +75,13 @@ local function createSideHealthBar(player)
 
     local text = Instance.new("TextLabel")
     text.Name = "HealthText"
-    text.Size = UDim2.new(1, 0, 0, 20)
-    text.Position = UDim2.new(0, 0, 0.5, -10)
+    text.Size = UDim2.new(3, 0, 0, 14) -- Чуть шире, чтобы текст помещался
+    text.Position = UDim2.new(1.2, 0, 0.5, -7) -- Справа от полоски
     text.BackgroundTransparency = 1
     text.Text = "100"
     text.TextColor3 = Color3.fromRGB(255, 255, 255)
     text.Font = Enum.Font.GothamBold
-    text.TextSize = 14
+    text.TextSize = 12
     text.TextStrokeTransparency = 0.3
     text.Parent = bill
 end
@@ -125,16 +126,19 @@ RunService.RenderStepped:Connect(function()
                             local health = math.floor(humanoid.Health)
                             local percent = health / 100
 
-                            local bar = side:FindFirstChild("Background"):FindFirstChild("HealthBar")
-                            if bar then
-                                bar.Size = UDim2.new(1, 0, percent, 0)
-                                bar.Position = UDim2.new(0, 0, 1 - percent, 0)
-                                if health > 70 then
-                                    bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                                elseif health > 30 then
-                                    bar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
-                                else
-                                    bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                            local bg = side:FindFirstChild("Background")
+                            if bg then
+                                local bar = bg:FindFirstChild("HealthBar")
+                                if bar then
+                                    bar.Size = UDim2.new(1, 0, percent, 0)
+                                    bar.Position = UDim2.new(0, 0, 1 - percent, 0)
+                                    if health > 70 then
+                                        bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                                    elseif health > 30 then
+                                        bar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+                                    else
+                                        bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                                    end
                                 end
                             end
 
