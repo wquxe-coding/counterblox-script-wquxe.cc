@@ -44,47 +44,7 @@ local function createNameTag(player)
     nameLabel.Parent = bill
 end
 
-local function createSideHealthBar(player)
-    if not player.Character then return end
-    local root = player.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-    local old = root:FindFirstChild("SideHealth")
-    if old then old:Destroy() end
-
-    local bill = Instance.new("BillboardGui")
-    bill.Name = "SideHealth"
-    bill.Size = UDim2.new(0, 8, 0, 70) -- Тонкая ширина 8
-    bill.StudsOffset = Vector3.new(2.5, 0, 0) -- Сбоку
-    bill.AlwaysOnTop = true
-    bill.Parent = root
-
-    local bg = Instance.new("Frame")
-    bg.Name = "Background"
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    bg.BackgroundTransparency = 0.3 -- Чуть прозрачный
-    bg.BorderSizePixel = 0
-    bg.Parent = bill
-
-    local bar = Instance.new("Frame")
-    bar.Name = "HealthBar"
-    bar.Size = UDim2.new(1, 0, 1, 0)
-    bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    bar.BorderSizePixel = 0
-    bar.Parent = bg
-
-    local text = Instance.new("TextLabel")
-    text.Name = "HealthText"
-    text.Size = UDim2.new(3, 0, 0, 14) -- Чуть шире, чтобы текст помещался
-    text.Position = UDim2.new(1.2, 0, 0.5, -7) -- Справа от полоски
-    text.BackgroundTransparency = 1
-    text.Text = "100"
-    text.TextColor3 = Color3.fromRGB(255, 255, 255)
-    text.Font = Enum.Font.GothamBold
-    text.TextSize = 12
-    text.TextStrokeTransparency = 0.3
-    text.Parent = bill
-end
+local healthBars = {}
 
 RunService.RenderStepped:Connect(function()
     local screenSize = Camera.ViewportSize
@@ -117,35 +77,57 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
 
-                if root then
-                    local side = root:FindFirstChild("SideHealth")
-                    if not side then
-                        createSideHealthBar(player)
+                if root and humanoid then
+                    local health = humanoid.Health
+                    local maxHealth = 100
+                    local percent = health / maxHealth
+
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position + Vector3.new(2.5, 0, 0))
+
+                    if onScreen then
+                        if not healthBars[player] then
+                            healthBars[player] = {
+                                bg = Drawing.new("Square"),
+                                fill = Drawing.new("Square"),
+                                text = Drawing.new("Text")
+                            }
+                        end
+
+                        local bar = healthBars[player]
+                        local x, y = screenPos.X, screenPos.Y
+                        local width = 6
+                        local height = 50
+
+                        bar.bg.Visible = true
+                        bar.bg.Position = Vector2.new(x - width/2, y - height/2)
+                        bar.bg.Size = Vector2.new(width, height)
+                        bar.bg.Color = Color3.fromRGB(0, 0, 0)
+                        bar.bg.Transparency = 0.3
+                        bar.bg.Filled = true
+
+                        bar.fill.Visible = true
+                        bar.fill.Position = Vector2.new(x - width/2, y - height/2 + height * (1 - percent))
+                        bar.fill.Size = Vector2.new(width, height * percent)
+                        if health > 70 then
+                            bar.fill.Color = Color3.fromRGB(0, 255, 0)
+                        elseif health > 30 then
+                            bar.fill.Color = Color3.fromRGB(255, 255, 0)
+                        else
+                            bar.fill.Color = Color3.fromRGB(255, 0, 0)
+                        end
+                        bar.fill.Filled = true
+
+                        bar.text.Visible = true
+                        bar.text.Position = Vector2.new(x + 10, y - 10)
+                        bar.text.Text = tostring(math.floor(health))
+                        bar.text.Color = Color3.fromRGB(255, 255, 255)
+                        bar.text.Size = 14
+                        bar.text.Outline = true
                     else
-                        if humanoid then
-                            local health = math.floor(humanoid.Health)
-                            local percent = health / 100
-
-                            local bg = side:FindFirstChild("Background")
-                            if bg then
-                                local bar = bg:FindFirstChild("HealthBar")
-                                if bar then
-                                    bar.Size = UDim2.new(1, 0, percent, 0)
-                                    bar.Position = UDim2.new(0, 0, 1 - percent, 0)
-                                    if health > 70 then
-                                        bar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                                    elseif health > 30 then
-                                        bar.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
-                                    else
-                                        bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-                                    end
-                                end
-                            end
-
-                            local text = side:FindFirstChild("HealthText")
-                            if text then
-                                text.Text = tostring(health)
-                            end
+                        if healthBars[player] then
+                            healthBars[player].bg.Visible = false
+                            healthBars[player].fill.Visible = false
+                            healthBars[player].text.Visible = false
                         end
                     end
                 end
@@ -154,13 +136,24 @@ RunService.RenderStepped:Connect(function()
                     local tag = head:FindFirstChild("NameTag")
                     if tag then tag:Destroy() end
                 end
-                if root then
-                    local side = root:FindFirstChild("SideHealth")
-                    if side then side:Destroy() end
-                end
                 local highlight = player.Character:FindFirstChild("EnemyHighlight")
                 if highlight then highlight:Destroy() end
+                if healthBars[player] then
+                    healthBars[player].bg:Remove()
+                    healthBars[player].fill:Remove()
+                    healthBars[player].text:Remove()
+                    healthBars[player] = nil
+                end
             end
+        end
+    end
+
+    for player, bar in pairs(healthBars) do
+        if not player or not player.Parent then
+            bar.bg:Remove()
+            bar.fill:Remove()
+            bar.text:Remove()
+            healthBars[player] = nil
         end
     end
 end)
